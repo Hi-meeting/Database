@@ -1,6 +1,5 @@
 package com.gachon.ham.database;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Environment;
@@ -51,12 +50,5 @@ public class DatabaseUtil {
             sqliteDB.execSQL(sqlCreateTbl);
         }
     }
-
-    //put value
-    public static synchronized void put(Context context, String key, String value) {
-
-        sqliteDB.execSQL(key);
-    }
-
 
 }
