@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         btnInsert.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-
+                mDbOpenHelper.insertColumn("1",ed1.getText().toString(),ed2.getText().toString(),"01000000000");
             }
         });
 
@@ -54,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 Cursor c = mDbOpenHelper.getColumn(1);
-                ed1.setText(c.getString(1));
+                ed1.setText(c.getString(2));
+                ed2.setText(c.getString(3));
             }
         });
 
@@ -62,9 +63,6 @@ public class MainActivity extends AppCompatActivity {
         // DB Create and Open
         mDbOpenHelper = new DbOpenHelper(this);
         mDbOpenHelper.open();
-
-        mDbOpenHelper.insertColumn("1","dongmin", "1", "question", "Hello my name is dongmin and I have a question!");
-
 
 
 
