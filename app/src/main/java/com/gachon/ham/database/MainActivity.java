@@ -63,6 +63,6 @@ public class MainActivity extends AppCompatActivity {
         // DB Create and Open
         mDbOpenHelper = new DbOpenHelper(this);
         mDbOpenHelper.openDB();
-        
+
     }
 }

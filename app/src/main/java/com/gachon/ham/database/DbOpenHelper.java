@@ -40,9 +40,17 @@ public class DbOpenHelper {
         @Override
         public void onCreate(SQLiteDatabase db) {
             // User DB
-            dropAndCreateTable(db, Databases.UserDatabaseUtil._TABLE_NAME);
-            dropAndCreateTable(db, Databases.ConferenceDatabaseUtil._TABLE_NAME);
-            dropAndCreateTable(db, Databases.SpeechDatabaseUtil._TABLE_NAME);
+            String DROP_SQL = "drop table if exists " + Databases.UserDatabaseUtil._TABLE_NAME;
+            db.execSQL(DROP_SQL);
+            db.execSQL(Databases.UserDatabaseUtil._CREATE);
+
+            DROP_SQL = "drop table if exists " + Databases.ConferenceDatabaseUtil._TABLE_NAME;
+            db.execSQL(DROP_SQL);
+            db.execSQL(Databases.ConferenceDatabaseUtil._CREATE);
+
+            DROP_SQL = "drop table if exists " + Databases.SpeechDatabaseUtil._TABLE_NAME;
+            db.execSQL(DROP_SQL);
+            db.execSQL(Databases.SpeechDatabaseUtil._CREATE);
         }
 
         @Override
