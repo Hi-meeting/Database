@@ -3,7 +3,6 @@ package com.gachon.ham.database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseErrorHandler;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
@@ -11,37 +10,39 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class DbOpenHelper {
+    private Context mContext;
+
     private static final String DATABASE_NAME = "speechDB.db";
     private static final int DATABASE_VERSION = 1;
     public static SQLiteDatabase mDB;
-    private UserDatabaseHelper mDBHelper;
-    private Context mContext;
+    private DatabaseHelper mDBHelper;
 
     // tag for debugging
     public static final String TAG = "TAG";
 
-    public class UserDatabaseHelper extends SQLiteOpenHelper {
+    public class DatabaseHelper extends SQLiteOpenHelper {
 
-        public UserDatabaseHelper(Context context) {
+        public DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
 
-        public UserDatabaseHelper(Context context, String name, CursorFactory factory, int version) {
+        public DatabaseHelper(Context context, String name, CursorFactory factory, int version) {
             super(context, name, factory, version);
         }
 
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            //Drop table if exist
-            String DROP_SQL = "drop table if exists " + Databases.UserDatabaseUtil._TABLE_NAME;
+    private void dropAndCreateTable(SQLiteDatabase db, String tableName){
+            // Drop table if exist and create
+            String DROP_SQL = "drop table if exists " + tableName;
             db.execSQL(DROP_SQL);
-
-            //Create table
             db.execSQL(Databases.UserDatabaseUtil._CREATE);
         }
 
         @Override
-        public void onOpen(SQLiteDatabase db) {
+        public void onCreate(SQLiteDatabase db) {
+            // User DB
+            dropAndCreateTable(db, Databases.UserDatabaseUtil._TABLE_NAME);
+            dropAndCreateTable(db, Databases.ConferenceDatabaseUtil._TABLE_NAME);
+            dropAndCreateTable(db, Databases.SpeechDatabaseUtil._TABLE_NAME);
         }
 
         @Override
@@ -57,40 +58,12 @@ public class DbOpenHelper {
         }
     }
 
-    public class ConferenceDatabaseHelper extends SQLiteOpenHelper{
-
-        public ConferenceDatabaseHelper(Context context, String name, CursorFactory factory, int version, DatabaseErrorHandler errorHandler) {
-            super(context, name, factory, version, errorHandler);
-        }
-
-        @Override
-        public synchronized void close() {
-            super.close();
-        }
-
-        @Override
-        public void onOpen(SQLiteDatabase db) {
-            super.onOpen(db);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-        }
-    }
-
-
     public DbOpenHelper(Context context) {
         this.mContext = context;
     }
 
-    public DbOpenHelper open() throws SQLException {
-        mDBHelper = new UserDatabaseHelper(mContext, DATABASE_NAME, null, DATABASE_VERSION);
+    public DbOpenHelper openDB() throws SQLException {
+        mDBHelper = new DatabaseHelper(mContext, DATABASE_NAME, null, DATABASE_VERSION);
         mDB = mDBHelper.getWritableDatabase();
         return this;
     }
@@ -99,9 +72,8 @@ public class DbOpenHelper {
         mDB.close();
     }
 
-    // User database
     // Insert DB
-    public long insertColumn(String _userId, String _userName, String _userPassword, String _userPhoneNumber){
+    public long insertColumn_User(String _userId, String _userName, String _userPassword, String _userPhoneNumber){
         ContentValues values = new ContentValues();
         values.put(Databases.UserDatabaseUtil.USER_ID, _userId);
         values.put(Databases.UserDatabaseUtil.USER_NAME, _userName);
@@ -110,8 +82,24 @@ public class DbOpenHelper {
         return mDB.insert(Databases.UserDatabaseUtil._TABLE_NAME, null, values);
     }
 
+    public long insertColumn_Con(String _conferenceName, String _participants, String _startTime){
+        ContentValues values = new ContentValues();
+        values.put(Databases.ConferenceDatabaseUtil.CONFERENCE_NAME, _conferenceName);
+        values.put(Databases.ConferenceDatabaseUtil.PARTICIPANTS, _participants);
+        values.put(Databases.ConferenceDatabaseUtil.START_TIME, _startTime);
+        return mDB.insert(Databases.ConferenceDatabaseUtil._TABLE_NAME, null, values);
+    }
+
+    public long insertColumn_Speech(String _userName, String _speechType, String _speechContent){
+        ContentValues values = new ContentValues();
+        values.put(Databases.SpeechDatabaseUtil.USER_NAME, _userName);
+        values.put(Databases.SpeechDatabaseUtil.SPEECH_TYPE, _speechType);
+        values.put(Databases.SpeechDatabaseUtil.SPEECH_CONTENT, _speechContent);
+        return mDB.insert(Databases.SpeechDatabaseUtil._TABLE_NAME, null, values);
+    }
+
     // Update DB
-    public boolean updateColumn(String _userId, String _userName, String _userPassword, String _userPhoneNumber){
+    public boolean updateColumn_User(String _userId, String _userName, String _userPassword, String _userPhoneNumber){
         ContentValues values = new ContentValues();
         values.put(Databases.UserDatabaseUtil.USER_ID, _userId);
         values.put(Databases.UserDatabaseUtil.USER_NAME, _userName);
@@ -120,14 +108,51 @@ public class DbOpenHelper {
         return mDB.update(Databases.UserDatabaseUtil._TABLE_NAME, values, "USER_ID="+_userId, null)>0;
     }
 
+    public boolean updateColumn_Con(String _conferenceName, String _participants, String _startTime){
+        ContentValues values = new ContentValues();
+        values.put(Databases.ConferenceDatabaseUtil.CONFERENCE_NAME, _conferenceName);
+        values.put(Databases.ConferenceDatabaseUtil.PARTICIPANTS, _participants);
+        values.put(Databases.ConferenceDatabaseUtil.START_TIME, _startTime);
+        return mDB.update(Databases.ConferenceDatabaseUtil._TABLE_NAME, values, "CONFERENCE_NAME="+_conferenceName, null)>0;
+    }
+
+    public boolean updateColumn_Speech(String _userName, String _speechType, String _speechContent){
+        ContentValues values = new ContentValues();
+        values.put(Databases.SpeechDatabaseUtil.USER_NAME, _userName);
+        values.put(Databases.SpeechDatabaseUtil.SPEECH_TYPE, _speechType);
+        values.put(Databases.SpeechDatabaseUtil.SPEECH_CONTENT, _speechContent);
+        return mDB.update(Databases.SpeechDatabaseUtil._TABLE_NAME,values, "USER_NAME="+_userName, null)>0;
+    }
+
     // ID 컬럼 얻어 오기
-    public Cursor getColumn(long id){
+    public Cursor getColumn_User(String _userName){
         Cursor c = mDB.query(Databases.UserDatabaseUtil._TABLE_NAME, null,
-                "_id="+id, null, null, null, null);
+                "USER_NAME="+_userName, null, null, null, null);
+        if(c != null && c.getCount() != 0)
+            c.moveToFirst();
+        return c;
+    }
+    public Cursor getColumn_User(long _id){
+        Cursor c = mDB.query(Databases.UserDatabaseUtil._TABLE_NAME, null,
+                "_ID="+_id, null, null, null, null);
         if(c != null && c.getCount() != 0)
             c.moveToFirst();
         return c;
     }
 
+    public Cursor getColumn_Con(String _conName){
+        Cursor c = mDB.query(Databases.ConferenceDatabaseUtil._TABLE_NAME, null,
+                "CONFERENCE_NAME="+_conName, null, null, null, null);
+        if(c != null && c.getCount() != 0)
+            c.moveToFirst();
+        return c;
+    }
 
+    public Cursor getColumn_Speech(long _id){
+        Cursor c = mDB.query(Databases.SpeechDatabaseUtil._TABLE_NAME, null,
+                "_id="+_id, null, null, null, null);
+        if(c != null && c.getCount() != 0)
+            c.moveToFirst();
+        return c;
+    }
 }
